@@ -21,72 +21,58 @@ namespace Estilingue
         /// ID of our program on the graphics card
         /// </summary>
         int pgmID;
-
         /// <summary>
         /// Address of the vertex shader
         /// </summary>
         int vsID;
-
         /// <summary>
         /// Address of the fragment shader
         /// </summary>
         int fsID;
-
         /// <summary>
         /// Address of the color parameter
         /// </summary>
         int attribute_vcol;
-
         /// <summary>
         /// Address of the position parameter
         /// </summary>
         int attribute_vpos;
-
         /// <summary>
         /// Address of the modelview matrix uniform
         /// </summary>
         int uniform_mview;
-
         /// <summary>
         /// Address of the Vertex Buffer Object for our position parameter
         /// </summary>
         int vbo_position;
-
         /// <summary>
         /// Address of the Vertex Buffer Object for our color parameter
         /// </summary>
         int vbo_color;
-
         /// <summary>
         /// Address of the Vertex Buffer Object for our modelview matrix
         /// </summary>
         int vbo_mview;
-
         /// <summary>
         /// Index Buffer Object
         /// </summary>
         int ibo_elements;
-
         /// <summary>
         /// Array of our vertex positions
         /// </summary>
         Vector3[] vertdata;
-
         /// <summary>
         /// Array of our vertex colors
         /// </summary>
         Vector3[] coldata;
-
         /// <summary>
         /// Array of our indices
         /// </summary>
         int[] indicedata;
-
         /// <summary>
         /// Current time, for animation
         /// </summary>
         float time = 0.0f;
-
         /// <summary>
         /// List of all the Volumes to be drawn
         /// </summary>
