@@ -5,22 +5,32 @@ namespace Estilingue
     public abstract class Volume
     {
 
-        public Vector3 Position = Vector3.Zero;
-        public Vector3 Rotation = Vector3.Zero;
-        public Vector3 Scale = Vector3.One;
+        private Vector3 position = Vector3.Zero;
+        private Vector3 rotation = Vector3.Zero;
+        private Vector3 scale = Vector3.One;
 
-        public int VertCount;
-        public int IndiceCount;
-        public int ColorDataCount;
-        public Matrix4 ModelMatrix = Matrix4.Identity;
-        public Matrix4 ViewProjectionMatrix = Matrix4.Identity;
-        public Matrix4 ModelViewProjectionMatrix = Matrix4.Identity;
+        private int vertCount;
+        private int indiceCount;
+        private int colorDataCount;
+        private Matrix4 modelMatrix = Matrix4.Identity;
+        private Matrix4 viewProjectionMatrix = Matrix4.Identity;
+        public Matrix4 modelViewProjectionMatrix = Matrix4.Identity;
+
+        public Vector3 Position { get => position; set => position = value; }
+        public Vector3 Rotation { get => rotation; set => rotation = value; }
+        public Vector3 Scale { get => scale; set => scale = value; }
+        public int VertCount { get => vertCount; set => vertCount = value; }
+        public int IndiceCount { get => indiceCount; set => indiceCount = value; }
+        public int ColorDataCount { get => colorDataCount; set => colorDataCount = value; }
+        public Matrix4 ModelMatrix { get => modelMatrix; set => modelMatrix = value; }
+        public Matrix4 ViewProjectionMatrix { get => viewProjectionMatrix; set => viewProjectionMatrix = value; }
+        public Matrix4 ModelViewProjectionMatrix { get => modelViewProjectionMatrix; set => modelViewProjectionMatrix = value; }
 
         protected Volume(Vector3 position, Vector3 rotation, Vector3 scale)
         {
-            Position = position;
-            Rotation = rotation;
-            Scale = scale;
+            this.position = position;
+            this.rotation = rotation;
+            this.scale = scale;
         }
 
         public abstract Vector3[] GetVerts();

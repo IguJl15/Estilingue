@@ -72,7 +72,7 @@ namespace Estilingue
         /// <summary>
         /// Current time, for animation
         /// </summary>
-        float time = 0.0f;
+        float time;
         /// <summary>
         /// List of all the Volumes to be drawn
         /// </summary>
@@ -167,7 +167,7 @@ namespace Estilingue
 
             foreach (Volume v in objects)
             {
-                GL.UniformMatrix4(uniform_mview, false, ref v.ModelViewProjectionMatrix);
+                GL.UniformMatrix4(uniform_mview, false, matrix: ref v.modelViewProjectionMatrix);
                 GL.DrawElements(BeginMode.Triangles, v.IndiceCount, DrawElementsType.UnsignedInt, indiceat * sizeof(uint));
                 indiceat += v.IndiceCount;
             }

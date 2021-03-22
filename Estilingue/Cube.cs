@@ -7,9 +7,9 @@ namespace Estilingue
         public Cube(Vector3 position, Vector3 rotation, Vector3 scale) : base(position, rotation, scale)
         {
 
-            Position = position;
-            Rotation = rotation;
-            Scale = scale;
+            position = position;
+            rotation = rotation;
+            scale = scale;
 
 
             VertCount = 8;
@@ -18,7 +18,7 @@ namespace Estilingue
         }
         public override Vector3[] GetVerts()
         {
-            return new Vector3[] {new Vector3(-0.5f, -0.5f,  -0.5f),
+            return new []{new Vector3(-0.5f, -0.5f,  -0.5f),
                 new Vector3(0.8f, -0.8f,  -0.8f),
                 new Vector3(0.8f, 0.8f,  -0.8f),
                 new Vector3(-0.8f, 0.8f,  -0.8f),
@@ -31,7 +31,7 @@ namespace Estilingue
         }
         public override int[] GetIndices(int offset)
         {
-            int[] inds = new int[] {
+            int[] inds = new []{
                 //left
                 0, 2, 1,
                 0, 3, 2,
@@ -65,8 +65,7 @@ namespace Estilingue
 
         public override Vector3[] GetColorData()
         {
-            return new Vector3[]
-            {
+            return new []{
                 new Vector3( 0.8f, 0.8f, 0.8f),
                 new Vector3( 0.7f, 0.7f, 0.7f),
                 new Vector3( 0.6f, 0.6f, 0.6f),
