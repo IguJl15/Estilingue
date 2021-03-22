@@ -6,10 +6,10 @@ namespace Estilingue
     {
         public Cube(Vector3 position, Vector3 rotation, Vector3 scale) : base(position, rotation, scale)
         {
-
-            position = position;
-            rotation = rotation;
-            scale = scale;
+            
+            this.Position = position;
+            this.Rotation = rotation;
+            this.Scale = scale;
 
 
             VertCount = 8;
