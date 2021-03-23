@@ -70,18 +70,16 @@ namespace Estilingue
         /// </summary>
         int[] indicedata;
         /// <summary>
-        /// Current time, for animation
-        /// </summary>
-        float time;
-        /// <summary>
         /// List of all the Volumes to be drawn
         /// </summary>
         List<Volume> objects = new List<Volume>();
+        Player player;
+        Camera camera;
 
         void initProgram()
         {
             objects.Add(new Cube(new Vector3(0.0f, -1f, 0f), Vector3.Zero, new Vector3(50f, 0.05f, 15f)));
-            objects.Add(new Cube(new Vector3(0.0f, 0.0f, -5f), Vector3.Zero, Vector3.One));
+            objects.Add(player);
 
             /** In this function, we'll start with a call to the GL.CreateProgram() function,
              * which returns the ID for a new program object, which we'll store in pgmID. */
@@ -122,8 +120,12 @@ namespace Estilingue
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-
+            player = new(new(0.0f, 0.0f, -5f), Vector3.Zero);
+            camera = new();
             initProgram();
+
+            Input.Initialize(this);
+            camera.Initialize(this);
 
             Title = "Hello OpenTK!";
             GL.ClearColor(Color.CornflowerBlue);
@@ -197,6 +199,27 @@ namespace Estilingue
                 vertcount += v.VertCount;
             }
 
+            // Processar inputs e updates das classes
+            player.Update((float)e.Time);
+            camera.Update(this);
+
+            if (Input.KeyPress(OpenTK.Input.Key.Escape))
+            {
+                if (CursorVisible)
+                {
+                    Exit();
+                }
+                else
+                {
+                    CursorVisible = true;
+                }
+            }
+            if (Input.MousePress(OpenTK.Input.MouseButton.Left) && CursorVisible)
+            {
+                CursorVisible = false;
+            }
+
+            //fim
             vertdata = verts.ToArray();
             indicedata = inds.ToArray();
             coldata = colors.ToArray();
@@ -209,17 +232,10 @@ namespace Estilingue
             GL.BufferData<Vector3>(BufferTarget.ArrayBuffer, (IntPtr)(coldata.Length * Vector3.SizeInBytes), coldata, BufferUsageHint.StaticDraw);
             GL.VertexAttribPointer(attribute_vcol, 3, VertexAttribPointerType.Float, true, 0, 0);
 
-
-            /** This code makes the shapes move around and spin, and also updates their model-view-projection matrices. */
-
-            time += (float)e.Time;
-
-
-
             foreach (Volume v in objects)
             {
                 v.CalculateModelMatrix();
-                v.ViewProjectionMatrix = Matrix4.CreatePerspectiveFieldOfView(1.3f, ClientSize.Width / (float)ClientSize.Height, 1.0f, 40.0f);
+                v.ViewProjectionMatrix = camera.GetViewMatrix() * Matrix4.CreatePerspectiveFieldOfView(1.3f, ClientSize.Width / (float)ClientSize.Height, 1.0f, 40.0f);
                 v.ModelViewProjectionMatrix = v.ModelMatrix * v.ViewProjectionMatrix;
             }
 
@@ -229,6 +245,8 @@ namespace Estilingue
 
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, ibo_elements);
             GL.BufferData(BufferTarget.ElementArrayBuffer, (IntPtr)(indicedata.Length * sizeof(int)), indicedata, BufferUsageHint.StaticDraw);
+            Input.Update();
+
         }
     }
 }
