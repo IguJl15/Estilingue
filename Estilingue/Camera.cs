@@ -61,7 +61,6 @@ namespace Estilingue
         private void Game_FocusedChanged(object sender, EventArgs e)
         {
             lastMouse = Input.MousePosition();
-            Console.WriteLine("No handler do focu");
         }
 
         public void Update(GameWindow game)

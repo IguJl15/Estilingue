@@ -11,12 +11,9 @@ namespace Estilingue
         public Vector3 inputVector = Vector3.Zero;
         public Vector3 velocity = Vector3.Zero;
         public Vector3 gravity = new Vector3(0f, 0.1f, 0f);
-        float friction = 10;
-        float maxVelocity = 5;
-        float acceleration = 1;
-
-        
-
+        readonly float friction = 10;
+        readonly float maxVelocity = 5;
+        readonly float acceleration = 1;
 
         public Player(Vector3 position,Vector3 rotation) : base(position, rotation, Vector3.One)
         {
