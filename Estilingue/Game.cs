@@ -79,7 +79,7 @@ namespace Estilingue
         void initProgram()
         {
             objects.Add(new Cube(new Vector3(0.0f, -1f, 0f), Vector3.Zero, new Vector3(50f, 0.05f, 15f)));
-            objects.Add(player);
+            //objects.Add(new Cube(new(0f, -0.5f, 0), Vector3.Zero, new(20f, 0.1f, 20f)));
 
             /** In this function, we'll start with a call to the GL.CreateProgram() function,
              * which returns the ID for a new program object, which we'll store in pgmID. */
@@ -130,6 +130,7 @@ namespace Estilingue
             Title = "Hello OpenTK!";
             GL.ClearColor(Color.CornflowerBlue);
             GL.PointSize(5f);
+
         }
 
         /// <summary>
@@ -150,7 +151,6 @@ namespace Estilingue
             }
             GL.CompileShader(address);
             GL.AttachShader(program, address);
-            Console.WriteLine(GL.GetShaderInfoLog(address));
         }
 
 
@@ -173,9 +173,19 @@ namespace Estilingue
                 GL.DrawElements(BeginMode.Triangles, v.IndiceCount, DrawElementsType.UnsignedInt, indiceat * sizeof(uint));
                 indiceat += v.IndiceCount;
             }
+            GL.UniformMatrix4(uniform_mview, false, matrix: ref player.modelViewProjectionMatrix);
+            GL.DrawElements(BeginMode.Triangles, player.IndiceCount, DrawElementsType.UnsignedInt, indiceat * sizeof(uint));
+            indiceat += player.IndiceCount;
+
 
             GL.DisableVertexAttribArray(attribute_vpos);
             GL.DisableVertexAttribArray(attribute_vcol);
+
+            GL.Begin(PrimitiveType.Lines);
+            GL.Color3(Color.Red);
+            GL.Vertex3(0, 0, 0);
+            GL.Vertex3(camera.offSet * 10);
+            GL.End();
 
             GL.Flush();
             SwapBuffers();
@@ -185,23 +195,9 @@ namespace Estilingue
         {
             base.OnUpdateFrame(e);
 
-            /** In this code, we gather up all the values for the data we need to send to the graphics card. */
-            List<Vector3> verts = new List<Vector3>();
-            List<int> inds = new List<int>();
-            List<Vector3> colors = new List<Vector3>();
-
-            int vertcount = 0;
-            foreach (Volume v in objects)
-            {
-                verts.AddRange(v.GetVerts().ToList());
-                inds.AddRange(v.GetIndices(vertcount).ToList());
-                colors.AddRange(v.GetColorData().ToList());
-                vertcount += v.VertCount;
-            }
-
             // Processar inputs e updates das classes
+
             player.Update((float)e.Time);
-            camera.Update(this);
 
             if (Input.KeyPress(OpenTK.Input.Key.Escape))
             {
@@ -220,9 +216,31 @@ namespace Estilingue
             }
 
             //fim
+
+            // In this code, we gather up all the values for the data we need to send to the graphics card.
+            List<Vector3> verts = new();
+            List<int> inds = new();
+            List<Vector3> colors = new();
+
+            int vertcount = 0;
+
+            foreach (Volume v in objects)
+            {
+                verts.AddRange(v.GetVerts().ToList());
+                inds.AddRange(v.GetIndices(vertcount).ToList());
+                colors.AddRange(v.GetColorData().ToList());
+                vertcount += v.VertCount;
+            }
+
+            verts.AddRange(player.GetVerts().ToList());
+            inds.AddRange(player.GetIndices(vertcount).ToList());
+            colors.AddRange(player.GetColorData().ToList());
+            vertcount += player.VertCount;
+
             vertdata = verts.ToArray();
             indicedata = inds.ToArray();
             coldata = colors.ToArray();
+
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo_position);
             GL.BufferData<Vector3>(BufferTarget.ArrayBuffer, (IntPtr)(vertdata.Length * Vector3.SizeInBytes), vertdata, BufferUsageHint.StaticDraw);
@@ -235,16 +253,21 @@ namespace Estilingue
             foreach (Volume v in objects)
             {
                 v.CalculateModelMatrix();
-                v.ViewProjectionMatrix = camera.GetViewMatrix() * Matrix4.CreatePerspectiveFieldOfView(1.3f, ClientSize.Width / (float)ClientSize.Height, 1.0f, 40.0f);
+                v.ViewProjectionMatrix = camera.GetThirdPersonViewMatrix(player.Position) * Matrix4.CreatePerspectiveFieldOfView(1.3f, ClientSize.Width / (float)ClientSize.Height, 1.0f, 40.0f);
                 v.ModelViewProjectionMatrix = v.ModelMatrix * v.ViewProjectionMatrix;
             }
+
+            player.CalculateModelMatrix();
+            player.ViewProjectionMatrix = camera.GetThirdPersonViewMatrix(player.Position) * Matrix4.CreatePerspectiveFieldOfView(1.3f, (float)ClientSize.Width / (float)ClientSize.Height, 1f, 40.0f);
+            player.ModelViewProjectionMatrix = player.ModelMatrix * player.ViewProjectionMatrix;
 
             GL.UseProgram(pgmID);
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
-
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, ibo_elements);
             GL.BufferData(BufferTarget.ElementArrayBuffer, (IntPtr)(indicedata.Length * sizeof(int)), indicedata, BufferUsageHint.StaticDraw);
+
+            camera.Update(this);
             Input.Update();
 
         }

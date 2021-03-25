@@ -22,10 +22,13 @@ namespace Estilingue
         public void Update(float delta)
         {
             inputVector = Vector3.Zero;
+            /**
             if (Input.KeyPress(Key.E))
             {
                 velocity.Y = maxVelocity;
             }
+            */
+
             if (Input.KeyDown(Key.D) | Input.KeyDown(Key.Right))
             {
                 inputVector.X++;
@@ -42,7 +45,9 @@ namespace Estilingue
             {
                 inputVector.Z--;
             }
+
             inputVector.NormalizeFast();
+
             if (inputVector != new Vector3(0f, 0f, 0f))
             {
                 velocity = Vector3.Lerp(velocity, //from
@@ -59,7 +64,6 @@ namespace Estilingue
             {
                 velocity -= gravity;
             }
-            Console.WriteLine(velocity);
 
             Position += new Vector3(velocity.X, velocity.Y, velocity.Z);
         }

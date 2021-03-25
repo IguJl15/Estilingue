@@ -19,13 +19,13 @@ namespace Estilingue
         public override Vector3[] GetVerts()
         {
             return new []{new Vector3(-0.5f, -0.5f,  -0.5f),
-                new Vector3(0.8f, -0.8f,  -0.8f),
-                new Vector3(0.8f, 0.8f,  -0.8f),
-                new Vector3(-0.8f, 0.8f,  -0.8f),
-                new Vector3(-0.8f, -0.8f,  0.8f),
-                new Vector3(0.8f, -0.8f,  0.8f),
-                new Vector3(0.8f, 0.8f,  0.8f),
-                new Vector3(-0.8f, 0.8f,  0.8f),
+                new Vector3(0.5f, -0.5f,  -0.5f),
+                new Vector3(0.5f, 0.5f,  -0.5f),
+                new Vector3(-0.5f, 0.5f,  -0.5f),
+                new Vector3(-0.5f, -0.5f,  0.5f),
+                new Vector3(0.5f, -0.5f,  0.5f),
+                new Vector3(0.5f, 0.5f,  0.5f),
+                new Vector3(-0.5f, 0.5f,  0.5f),
             };
 
         }

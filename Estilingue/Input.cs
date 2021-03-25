@@ -1,7 +1,7 @@
 ﻿using OpenTK;
 using System.Collections.Generic;
 using OpenTK.Input;
-
+using System;
 namespace Estilingue
 {
     static class Input
@@ -22,7 +22,14 @@ namespace Estilingue
             game.KeyUp += Game_KeyUp;
             game.MouseDown += Game_MouseDown;
             game.MouseUp += Game_MouseUp;
+            game.MouseWheel += Game_MouseWheel;
 
+        }
+
+        private static void Game_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            Console.WriteLine(e.DeltaPrecise); // vezes rolado
+            Console.WriteLine(e.Value); // total desde que o programa foi aberto
         }
 
         private static void Game_KeyUp(object sender, KeyboardKeyEventArgs e)
@@ -52,6 +59,7 @@ namespace Estilingue
             {
                 buttonsDown.Add(e.Button);
             }
+            Console.WriteLine("Button: " + e.Button);
         }
 
         public static void Update()
