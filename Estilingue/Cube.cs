@@ -4,21 +4,19 @@ namespace Estilingue
 {
     public class Cube : Volume
     {
-        public Cube(Vector3 position, Vector3 rotation, Vector3 scale) : base(position, rotation, scale)
+        public Vector3 color;
+
+        public Cube(Vector3 position, Vector3 rotation, Vector3 scale, Vector3 color) : base(position, rotation, scale, color)
         {
-            
-            this.Position = position;
-            this.Rotation = rotation;
-            this.Scale = scale;
-
-
+            this.color = color;
             VertCount = 8;
             IndiceCount = 36; // Two triangles (3 vertices) per face for all the six faces. 2 * 3 * 6
             ColorDataCount = 8;
         }
+
         public override Vector3[] GetVerts()
         {
-            return new []{new Vector3(-0.5f, -0.5f,  -0.5f),
+            return new[]{new(-0.5f, -0.5f,  -0.5f),
                 new Vector3(0.5f, -0.5f,  -0.5f),
                 new Vector3(0.5f, 0.5f,  -0.5f),
                 new Vector3(-0.5f, 0.5f,  -0.5f),
@@ -27,11 +25,11 @@ namespace Estilingue
                 new Vector3(0.5f, 0.5f,  0.5f),
                 new Vector3(-0.5f, 0.5f,  0.5f),
             };
-
         }
+
         public override int[] GetIndices(int offset)
         {
-            int[] inds = new []{
+            int[] inds = new[]{
                 //left
                 0, 2, 1,
                 0, 3, 2,
@@ -65,16 +63,15 @@ namespace Estilingue
 
         public override Vector3[] GetColorData()
         {
-            return new []{
-                new Vector3( 0.8f, 0.8f, 0.8f),
-                new Vector3( 0.7f, 0.7f, 0.7f),
-                new Vector3( 0.6f, 0.6f, 0.6f),
-                new Vector3( 0.8f, 0.8f, 0.8f),
-                new Vector3( 0.6f, 0.6f, 0.6f),
-                new Vector3( 0.5f, 0.5f, 0.5f),
-                new Vector3( 0.8f, 0.8f, 0.8f),
-                new Vector3( 0.8f, 0.8f, 0.8f)
-            };
+            return new[]{
+                new Vector3(1.0f, 0.65f, 0.42f),
+                new Vector3(0.9f, 0.65f, 0.3f),
+                new Vector3(1.0f, 0.65f, 0.42f),
+                new Vector3(1.0f, 0.55f, 0.3f),
+                new Vector3(0.9f, 0.55f, 0.3f),
+                new Vector3(1.0f, 0.65f, 0.42f),
+                new Vector3(1.0f, 0.65f, 0.3f),
+                new Vector3(0.9f, 0.55f, 0.42f)};
         }
 
         public override void CalculateModelMatrix()
@@ -86,6 +83,5 @@ namespace Estilingue
                 Matrix4.CreateRotationZ(Rotation.Z) *
                 Matrix4.CreateTranslation(Position);
         }
-
     }
 }

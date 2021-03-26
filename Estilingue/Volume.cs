@@ -4,10 +4,10 @@ namespace Estilingue
 {
     public abstract class Volume
     {
-
         private Vector3 position = Vector3.Zero;
         private Vector3 rotation = Vector3.Zero;
         private Vector3 scale = Vector3.One;
+        private Vector3 color = new(0.8f, 0.8f, 0.8f);
 
         private int vertCount;
         private int indiceCount;
@@ -26,16 +26,20 @@ namespace Estilingue
         public Matrix4 ViewProjectionMatrix { get => viewProjectionMatrix; set => viewProjectionMatrix = value; }
         public Matrix4 ModelViewProjectionMatrix { get => modelViewProjectionMatrix; set => modelViewProjectionMatrix = value; }
 
-        protected Volume(Vector3 position, Vector3 rotation, Vector3 scale)
+        protected Volume(Vector3 position, Vector3 rotation, Vector3 scale, Vector3 color)
         {
             this.position = position;
             this.rotation = rotation;
             this.scale = scale;
+            this.color = color;
         }
 
         public abstract Vector3[] GetVerts();
+
         public abstract int[] GetIndices(int offset = 0);
+
         public abstract Vector3[] GetColorData();
+
         public abstract void CalculateModelMatrix();
     }
 }

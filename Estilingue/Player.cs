@@ -1,49 +1,57 @@
 ﻿using OpenTK;
 using OpenTK.Input;
-using System;
 
 namespace Estilingue
 {
-    class Player : Cube
+    internal class Player : Cube
     {
-
         public Vector2 mouse = Vector2.Zero;
         public Vector3 inputVector = Vector3.Zero;
         public Vector3 velocity = Vector3.Zero;
         public Vector3 gravity = new Vector3(0f, 0.1f, 0f);
-        readonly float friction = 10;
-        readonly float maxVelocity = 5;
-        readonly float acceleration = 1;
-
-        public Player(Vector3 position,Vector3 rotation) : base(position, rotation, Vector3.One)
+        private readonly float friction = 10;
+        private float maxVelocity = 5;
+        private readonly float acceleration = 1;
+        public float mouseSensitivity = 0.03f;
+        public Player(Vector3 position, Vector3 rotation, Vector3 color) : base(position, rotation, Vector3.One, color)
         {
         }
 
         public void Update(float delta)
         {
             inputVector = Vector3.Zero;
-            /**
-            if (Input.KeyPress(Key.E))
+           
+            if (Input.KeyDown(Key.Q))
             {
-                velocity.Y = maxVelocity;
+                inputVector.Y--;
             }
-            */
-
-            if (Input.KeyDown(Key.D) | Input.KeyDown(Key.Right))
+            if (Input.KeyDown(Key.E))
+            {
+                inputVector.Y++;
+            }
+            if (Input.KeyDown(Key.D))
             {
                 inputVector.X++;
             }
-            if (Input.KeyDown(Key.A) | Input.KeyDown(Key.Left))
+            if (Input.KeyDown(Key.A))
             {
                 inputVector.X--;
             }
-            if (Input.KeyDown(Key.S) | Input.KeyDown(Key.Down))
+            if (Input.KeyDown(Key.S))
             {
                 inputVector.Z++;
             }
-            if (Input.KeyDown(Key.W) | Input.KeyDown(Key.Up))
+            if (Input.KeyDown(Key.W))
             {
                 inputVector.Z--;
+            }
+            if (Input.KeyPress(Key.ShiftLeft))
+            {
+                maxVelocity *= 1.6f;
+            }
+            if (Input.KeyRelease(Key.ShiftLeft))
+            {
+                maxVelocity /= 1.6f;
             }
 
             inputVector.NormalizeFast();
@@ -56,14 +64,19 @@ namespace Estilingue
             }
             else
             {
-                velocity = Vector3.Lerp(velocity, // from 
+                velocity = Vector3.Lerp(velocity, // from
                                         Vector3.Zero, // to
                                         delta * friction); // step %
             }
-            if (Position.Y > 0.0f)
+            
+            if (!Input.MouseDown(MouseButton.Left))
             {
-                velocity -= gravity;
+                Rotation = new(0f, Rotation.Y + Input.DeltaMovement().X * mouseSensitivity, 0);
             }
+            //if (Position.Y > 0.0f)
+            //{
+            //    velocity -= gravity;
+            //}
 
             Position += new Vector3(velocity.X, velocity.Y, velocity.Z);
         }

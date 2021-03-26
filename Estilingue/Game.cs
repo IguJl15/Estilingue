@@ -1,84 +1,97 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using OpenTK;
+﻿using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
+using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 
 namespace Estilingue
 {
-    class Game : GameWindow
+    public class Game : GameWindow
     {
         public Game()
             : base(1280, 720, new GraphicsMode(32, 24, 0, 4))
         {
-
         }
 
         /// <summary>
         /// ID of our program on the graphics card
         /// </summary>
-        int pgmID;
+        private int pgmID;
+
         /// <summary>
         /// Address of the vertex shader
         /// </summary>
-        int vsID;
+        private int vsID;
+
         /// <summary>
         /// Address of the fragment shader
         /// </summary>
-        int fsID;
+        private int fsID;
+
         /// <summary>
         /// Address of the color parameter
         /// </summary>
-        int attribute_vcol;
+        private int attribute_vcol;
+
         /// <summary>
         /// Address of the position parameter
         /// </summary>
-        int attribute_vpos;
+        private int attribute_vpos;
+
         /// <summary>
         /// Address of the modelview matrix uniform
         /// </summary>
-        int uniform_mview;
+        private int uniform_mview;
+
         /// <summary>
         /// Address of the Vertex Buffer Object for our position parameter
         /// </summary>
-        int vbo_position;
+        private int vbo_position;
+
         /// <summary>
         /// Address of the Vertex Buffer Object for our color parameter
         /// </summary>
-        int vbo_color;
+        private int vbo_color;
+
         /// <summary>
         /// Address of the Vertex Buffer Object for our modelview matrix
         /// </summary>
-        int vbo_mview;
+        private int vbo_mview;
+
         /// <summary>
         /// Index Buffer Object
         /// </summary>
-        int ibo_elements;
+        private int ibo_elements;
+
         /// <summary>
         /// Array of our vertex positions
         /// </summary>
-        Vector3[] vertdata;
+        private Vector3[] vertdata;
+
         /// <summary>
         /// Array of our vertex colors
         /// </summary>
-        Vector3[] coldata;
+        private Vector3[] coldata;
+
         /// <summary>
         /// Array of our indices
         /// </summary>
-        int[] indicedata;
+        private int[] indicedata;
+
         /// <summary>
         /// List of all the Volumes to be drawn
         /// </summary>
-        List<Volume> objects = new List<Volume>();
-        Player player;
-        Camera camera;
+        private List<Volume> objects = new List<Volume>();
 
-        void initProgram()
+        private Player player;
+        private TCamera camera;
+        public float FPS;
+        private void initProgram()
         {
-            objects.Add(new Cube(new Vector3(0.0f, -1f, 0f), Vector3.Zero, new Vector3(50f, 0.05f, 15f)));
+            objects.Add(new Cube(new Vector3(0.0f, -1f, 0f), Vector3.Zero, new Vector3(50f, 0.05f, 15f), new(1.0f, 0.55f, 0.42f)));
             //objects.Add(new Cube(new(0f, -0.5f, 0), Vector3.Zero, new(20f, 0.1f, 20f)));
 
             /** In this function, we'll start with a call to the GL.CreateProgram() function,
@@ -95,8 +108,8 @@ namespace Estilingue
 
             /** We have multiple inputs on our vertex shader, so we need to get
             * their addresses to give the shader position and color information for our vertices.
-            * 
-            * To get the addresses for each variable, we use the 
+            *
+            * To get the addresses for each variable, we use the
             * GL.GetAttribLocation and GL.GetUniformLocation functions.
             * Each takes the program's ID and the name of the variable in the shader. */
             attribute_vpos = GL.GetAttribLocation(pgmID, "vPosition");
@@ -106,7 +119,7 @@ namespace Estilingue
             /** Now our shaders and program are set up, but we need to give them something to draw.
              * To do this, we'll be using a Vertex Buffer Object (VBO).
              * When you use a VBO, first you need to have the graphics card create
-             * one, then bind to it and send your information. 
+             * one, then bind to it and send your information.
              * Then, when the DrawArrays function is called, the information in
              * the buffers will be sent to the shaders and drawn to the screen. */
             GL.GenBuffers(1, out vbo_position);
@@ -120,17 +133,16 @@ namespace Estilingue
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-            player = new(new(0.0f, 0.0f, -5f), Vector3.Zero);
-            camera = new();
+            player = new(new(0.0f, 0.0f, -5f), Vector3.Zero, new(0.8f, 0.8f, 0.8f));
+            camera = new(player);
             initProgram();
 
             Input.Initialize(this);
-            camera.Initialize(this);
+            //camera.Initialize(this);
 
             Title = "Hello OpenTK!";
             GL.ClearColor(Color.CornflowerBlue);
             GL.PointSize(5f);
-
         }
 
         /// <summary>
@@ -141,9 +153,8 @@ namespace Estilingue
         /// <param name="type">Type of shader to load</param>
         /// <param name="program">ID of the program to use the shader with</param>
         /// <param name="address">Address of the compiled shader</param>
-        void loadShader(String filename, ShaderType type, int program, out int address)
+        private void loadShader(String filename, ShaderType type, int program, out int address)
         {
-
             address = GL.CreateShader(type);
             using (StreamReader sr = new(filename))
             {
@@ -153,13 +164,12 @@ namespace Estilingue
             GL.AttachShader(program, address);
         }
 
-
-
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             base.OnRenderFrame(e);
             GL.Viewport(0, 0, Width, Height);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
             GL.Enable(EnableCap.DepthTest);
 
             GL.EnableVertexAttribArray(attribute_vpos);
@@ -177,15 +187,8 @@ namespace Estilingue
             GL.DrawElements(BeginMode.Triangles, player.IndiceCount, DrawElementsType.UnsignedInt, indiceat * sizeof(uint));
             indiceat += player.IndiceCount;
 
-
             GL.DisableVertexAttribArray(attribute_vpos);
             GL.DisableVertexAttribArray(attribute_vcol);
-
-            GL.Begin(PrimitiveType.Lines);
-            GL.Color3(Color.Red);
-            GL.Vertex3(0, 0, 0);
-            GL.Vertex3(camera.offSet * 10);
-            GL.End();
 
             GL.Flush();
             SwapBuffers();
@@ -195,9 +198,11 @@ namespace Estilingue
         {
             base.OnUpdateFrame(e);
 
+            FPS++;
             // Processar inputs e updates das classes
 
             player.Update((float)e.Time);
+            camera.Update(this);
 
             if (Input.KeyPress(OpenTK.Input.Key.Escape))
             {
@@ -242,6 +247,7 @@ namespace Estilingue
             coldata = colors.ToArray();
 
 
+
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo_position);
             GL.BufferData<Vector3>(BufferTarget.ArrayBuffer, (IntPtr)(vertdata.Length * Vector3.SizeInBytes), vertdata, BufferUsageHint.StaticDraw);
             GL.VertexAttribPointer(attribute_vpos, 3, VertexAttribPointerType.Float, false, 0, 0);
@@ -253,12 +259,14 @@ namespace Estilingue
             foreach (Volume v in objects)
             {
                 v.CalculateModelMatrix();
-                v.ViewProjectionMatrix = camera.GetThirdPersonViewMatrix(player.Position) * Matrix4.CreatePerspectiveFieldOfView(1.3f, ClientSize.Width / (float)ClientSize.Height, 1.0f, 40.0f);
+                v.ViewProjectionMatrix = camera.GetThirdPersonViewMatrix() *
+                    Matrix4.CreatePerspectiveFieldOfView(1.3f, ClientSize.Width / (float)ClientSize.Height, 0.1f, 50.0f);
                 v.ModelViewProjectionMatrix = v.ModelMatrix * v.ViewProjectionMatrix;
             }
 
             player.CalculateModelMatrix();
-            player.ViewProjectionMatrix = camera.GetThirdPersonViewMatrix(player.Position) * Matrix4.CreatePerspectiveFieldOfView(1.3f, (float)ClientSize.Width / (float)ClientSize.Height, 1f, 40.0f);
+            player.ViewProjectionMatrix = camera.GetThirdPersonViewMatrix() *
+                Matrix4.CreatePerspectiveFieldOfView(1.3f, (float)ClientSize.Width / (float)ClientSize.Height, 0.1f, 50.0f);
             player.ModelViewProjectionMatrix = player.ModelMatrix * player.ViewProjectionMatrix;
 
             GL.UseProgram(pgmID);
@@ -267,9 +275,7 @@ namespace Estilingue
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, ibo_elements);
             GL.BufferData(BufferTarget.ElementArrayBuffer, (IntPtr)(indicedata.Length * sizeof(int)), indicedata, BufferUsageHint.StaticDraw);
 
-            camera.Update(this);
-            Input.Update();
-
+            Input.Update(FPS);
         }
     }
 }
