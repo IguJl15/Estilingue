@@ -4,6 +4,7 @@ using OpenTK.Graphics.OpenGL;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 
@@ -11,195 +12,155 @@ namespace Estilingue
 {
     public class Game : GameWindow
     {
-        public Game()
-            : base(1280, 720, new GraphicsMode(32, 24, 0, 4))
-        {
-        }
-
-        /// <summary>
-        /// ID of our program on the graphics card
-        /// </summary>
-        private int pgmID;
-
-        /// <summary>
-        /// Address of the vertex shader
-        /// </summary>
-        private int vsID;
-
-        /// <summary>
-        /// Address of the fragment shader
-        /// </summary>
-        private int fsID;
-
-        /// <summary>
-        /// Address of the color parameter
-        /// </summary>
-        private int attribute_vcol;
-
-        /// <summary>
-        /// Address of the position parameter
-        /// </summary>
-        private int attribute_vpos;
-
-        /// <summary>
-        /// Address of the modelview matrix uniform
-        /// </summary>
-        private int uniform_mview;
-
-        /// <summary>
-        /// Address of the Vertex Buffer Object for our position parameter
-        /// </summary>
-        private int vbo_position;
-
-        /// <summary>
-        /// Address of the Vertex Buffer Object for our color parameter
-        /// </summary>
-        private int vbo_color;
-
-        /// <summary>
-        /// Address of the Vertex Buffer Object for our modelview matrix
-        /// </summary>
-        private int vbo_mview;
-
-        /// <summary>
-        /// Index Buffer Object
-        /// </summary>
+        
         private int ibo_elements;
-
-        /// <summary>
-        /// Array of our vertex positions
-        /// </summary>
         private Vector3[] vertdata;
-
-        /// <summary>
-        /// Array of our vertex colors
-        /// </summary>
         private Vector3[] coldata;
-
-        /// <summary>
-        /// Array of our indices
-        /// </summary>
         private int[] indicedata;
 
-        /// <summary>
-        /// List of all the Volumes to be drawn
-        /// </summary>
+        Dictionary<string, ShaderProgram> shaders = new();
+        string activeShader = "default";
+
+        Dictionary<string, int> textures = new();
+        Vector2[] texcoorddata;
+
         private List<Volume> objects = new List<Volume>();
 
         private Player player;
         private TCamera camera;
+
         public float FPS;
+
+        public Game()
+            : base(1280, 720, new GraphicsMode(32, 24, 0, 4))
+        {
+        }
+        int LoadImage(Bitmap image)
+        {
+            int textID = GL.GenTexture();
+
+            GL.BindTexture(TextureTarget.Texture2D, textID);
+            BitmapData data = image.LockBits(
+                new(0, 0, image.Width, image.Height),
+                ImageLockMode.ReadOnly,
+                System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
+            GL.TexImage2D(
+                TextureTarget.Texture2D, 0,
+                PixelInternalFormat.Rgba,
+                data.Width, data.Height, 0,
+                OpenTK.Graphics.OpenGL.PixelFormat.Bgra,
+                PixelType.UnsignedByte,
+                data.Scan0);
+            image.UnlockBits(data);
+            GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
+            return textID;
+        }
+        int LoadImage(string filename)
+        {
+            try
+            {
+                Bitmap file = new(filename);
+                return LoadImage(file);
+            }
+            catch (FileNotFoundException e)
+            {
+                return -1;
+            }
+        }
         private void initProgram()
         {
-            objects.Add(new Cube(new Vector3(0.0f, -1f, 0f), Vector3.Zero, new Vector3(50f, 0.05f, 15f), new(1.0f, 0.55f, 0.42f)));
-            //objects.Add(new Cube(new(0f, -0.5f, 0), Vector3.Zero, new(20f, 0.1f, 20f)));
-
-            /** In this function, we'll start with a call to the GL.CreateProgram() function,
-             * which returns the ID for a new program object, which we'll store in pgmID. */
-            pgmID = GL.CreateProgram();
-
-            loadShader("vs.glsl", ShaderType.VertexShader, pgmID, out vsID);
-            loadShader("fs.glsl", ShaderType.FragmentShader, pgmID, out fsID);
-
-            /** Now that the shaders are added, the program needs to be linked.
-             * Like C code, the code is first compiled, then linked, so that it goes
-             * from human-readable code to the machine language needed. */
-            GL.LinkProgram(pgmID);
-
-            /** We have multiple inputs on our vertex shader, so we need to get
-            * their addresses to give the shader position and color information for our vertices.
-            *
-            * To get the addresses for each variable, we use the
-            * GL.GetAttribLocation and GL.GetUniformLocation functions.
-            * Each takes the program's ID and the name of the variable in the shader. */
-            attribute_vpos = GL.GetAttribLocation(pgmID, "vPosition");
-            attribute_vcol = GL.GetAttribLocation(pgmID, "vColor");
-            uniform_mview = GL.GetUniformLocation(pgmID, "modelview");
-
-            /** Now our shaders and program are set up, but we need to give them something to draw.
-             * To do this, we'll be using a Vertex Buffer Object (VBO).
-             * When you use a VBO, first you need to have the graphics card create
-             * one, then bind to it and send your information.
-             * Then, when the DrawArrays function is called, the information in
-             * the buffers will be sent to the shaders and drawn to the screen. */
-            GL.GenBuffers(1, out vbo_position);
-            GL.GenBuffers(1, out vbo_color);
-            GL.GenBuffers(1, out vbo_mview);
-
+            objects.Add(new Cube(new Vector3(0.0f, -1f, 0f), Vector3.Zero, new Vector3(50f, 0.05f, 15f)));
             /** We'll need to get another buffer object to put our indice data into.  */
             GL.GenBuffers(1, out ibo_elements);
-        }
 
+            shaders.Add("default", new ShaderProgram("vs.glsl", "fs.glsl", true));
+            shaders.Add("textured", new ShaderProgram("vs_tex.glsl", "fs_tex.glsl", true));
+
+            activeShader = "textured";
+
+            textures.Add("opentksquare.png", LoadImage("opentksquare.png"));
+            textures.Add("opentksquare2.png", LoadImage("opentksquare2.png"));
+
+            TexturedCube tc = new(new(5.0f, 1f, 0f), Vector3.Zero, Vector3.One);
+            tc.TextureID = textures["opentksquare.png"];
+            objects.Add(tc);
+
+            TexturedCube tc2 = new(new(-5.0f, 1f, 0f), Vector3.Zero, Vector3.One);
+            tc2.Position += new Vector3(1f, 1f, 1f);
+            tc2.TextureID = textures["opentksquare2.png"];
+            objects.Add(tc2);
+
+
+            player = new(new(0.0f, 0.0f, -5f), Vector3.Zero, new(0.8f, 0.8f, 0.8f));
+            //player.TextureID = textures["opentksquare2.png"];
+            camera = new(player);
+
+
+        }
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-            player = new(new(0.0f, 0.0f, -5f), Vector3.Zero, new(0.8f, 0.8f, 0.8f));
-            camera = new(player);
             initProgram();
 
             Input.Initialize(this);
-            //camera.Initialize(this);
+            
 
             Title = "Hello OpenTK!";
             GL.ClearColor(Color.CornflowerBlue);
             GL.PointSize(5f);
         }
-
-        /// <summary>
-        /// This creates a new shader (using a value from the ShaderType enum), loads code for it, compiles it, and adds it to our program.
-        /// It also prints any errors it found to the console, which is really nice for when you make a mistake in a shader (it will also yell at you if you use deprecated code).
-        /// </summary>
-        /// <param name="filename">File to load the shader from</param>
-        /// <param name="type">Type of shader to load</param>
-        /// <param name="program">ID of the program to use the shader with</param>
-        /// <param name="address">Address of the compiled shader</param>
-        private void loadShader(String filename, ShaderType type, int program, out int address)
-        {
-            address = GL.CreateShader(type);
-            using (StreamReader sr = new(filename))
-            {
-                GL.ShaderSource(address, sr.ReadToEnd());
-            }
-            GL.CompileShader(address);
-            GL.AttachShader(program, address);
-        }
-
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             base.OnRenderFrame(e);
             GL.Viewport(0, 0, Width, Height);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-
             GL.Enable(EnableCap.DepthTest);
 
-            GL.EnableVertexAttribArray(attribute_vpos);
-            GL.EnableVertexAttribArray(attribute_vcol);
+            shaders[activeShader].EnableVertexAttribArrays();
 
             int indiceat = 0;
 
             foreach (Volume v in objects)
             {
-                GL.UniformMatrix4(uniform_mview, false, matrix: ref v.modelViewProjectionMatrix);
+                GL.ActiveTexture(TextureUnit.Texture0);
+                GL.BindTexture(TextureTarget.Texture2D, v.TextureID);
+
+                Matrix4 mdv1 = v.ModelViewProjectionMatrix;
+
+                GL.UniformMatrix4(shaders[activeShader].GetUniform("modelview"), false, ref mdv1);
+
+                if (shaders[activeShader].GetUniform("maintexture") != -1)
+                {
+                    GL.Uniform1(shaders[activeShader].GetUniform("maintexture"), 0);
+                }
+
                 GL.DrawElements(BeginMode.Triangles, v.IndiceCount, DrawElementsType.UnsignedInt, indiceat * sizeof(uint));
                 indiceat += v.IndiceCount;
             }
-            GL.UniformMatrix4(uniform_mview, false, matrix: ref player.modelViewProjectionMatrix);
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindTexture(TextureTarget.Texture2D, player.TextureID);
+
+            Matrix4 mdv = player.ModelViewProjectionMatrix;
+
+            GL.UniformMatrix4(shaders[activeShader].GetUniform("modelview"), false, ref mdv);
+
+            if (shaders[activeShader].GetUniform("maintexture") != -1)
+            {
+                GL.Uniform1(shaders[activeShader].GetUniform("maintexture"), 0);
+            }
+
             GL.DrawElements(BeginMode.Triangles, player.IndiceCount, DrawElementsType.UnsignedInt, indiceat * sizeof(uint));
             indiceat += player.IndiceCount;
 
-            GL.DisableVertexAttribArray(attribute_vpos);
-            GL.DisableVertexAttribArray(attribute_vcol);
+            shaders[activeShader].DisableVertexAttribArrays();
 
             GL.Flush();
             SwapBuffers();
         }
-
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             base.OnUpdateFrame(e);
-
-            FPS++;
-            // Processar inputs e updates das classes
 
             player.Update((float)e.Time);
             camera.Update(this);
@@ -220,12 +181,12 @@ namespace Estilingue
                 CursorVisible = false;
             }
 
-            //fim
 
             // In this code, we gather up all the values for the data we need to send to the graphics card.
             List<Vector3> verts = new();
             List<int> inds = new();
             List<Vector3> colors = new();
+            List<Vector2> texcoords = new List<Vector2>();
 
             int vertcount = 0;
 
@@ -234,33 +195,49 @@ namespace Estilingue
                 verts.AddRange(v.GetVerts().ToList());
                 inds.AddRange(v.GetIndices(vertcount).ToList());
                 colors.AddRange(v.GetColorData().ToList());
+                texcoords.AddRange(v.GetTextureCoords());
                 vertcount += v.VertCount;
             }
 
             verts.AddRange(player.GetVerts().ToList());
             inds.AddRange(player.GetIndices(vertcount).ToList());
             colors.AddRange(player.GetColorData().ToList());
+            texcoords.AddRange(player.GetTextureCoords());
             vertcount += player.VertCount;
 
             vertdata = verts.ToArray();
             indicedata = inds.ToArray();
             coldata = colors.ToArray();
+            texcoorddata = texcoords.ToArray();
 
 
 
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo_position);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, shaders[activeShader].GetBuffer("vPosition"));
+
             GL.BufferData<Vector3>(BufferTarget.ArrayBuffer, (IntPtr)(vertdata.Length * Vector3.SizeInBytes), vertdata, BufferUsageHint.StaticDraw);
-            GL.VertexAttribPointer(attribute_vpos, 3, VertexAttribPointerType.Float, false, 0, 0);
+            GL.VertexAttribPointer(shaders[activeShader].GetAttribute("vPosition"), 3, VertexAttribPointerType.Float, false, 0, 0);
 
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo_color);
-            GL.BufferData<Vector3>(BufferTarget.ArrayBuffer, (IntPtr)(coldata.Length * Vector3.SizeInBytes), coldata, BufferUsageHint.StaticDraw);
-            GL.VertexAttribPointer(attribute_vcol, 3, VertexAttribPointerType.Float, true, 0, 0);
+            // Buffer vertex color if shader supports it
+            if (shaders[activeShader].GetAttribute("vColor") != -1)
+            {
+                GL.BindBuffer(BufferTarget.ArrayBuffer, shaders[activeShader].GetBuffer("vColor"));
+                GL.BufferData<Vector3>(BufferTarget.ArrayBuffer, (IntPtr)(coldata.Length * Vector3.SizeInBytes), coldata, BufferUsageHint.StaticDraw);
+                GL.VertexAttribPointer(shaders[activeShader].GetAttribute("vColor"), 3, VertexAttribPointerType.Float, true, 0, 0);
+            }
+
+
+            // Buffer texture coordinates if shader supports it
+            if (shaders[activeShader].GetAttribute("texcoord") != -1)
+            {
+                GL.BindBuffer(BufferTarget.ArrayBuffer, shaders[activeShader].GetBuffer("texcoord"));
+                GL.BufferData<Vector2>(BufferTarget.ArrayBuffer, (IntPtr)(texcoorddata.Length * Vector2.SizeInBytes), texcoorddata, BufferUsageHint.StaticDraw);
+                GL.VertexAttribPointer(shaders[activeShader].GetAttribute("texcoord"), 2, VertexAttribPointerType.Float, true, 0, 0);
+            }
 
             foreach (Volume v in objects)
             {
                 v.CalculateModelMatrix();
-                v.ViewProjectionMatrix = camera.GetThirdPersonViewMatrix() *
-                    Matrix4.CreatePerspectiveFieldOfView(1.3f, ClientSize.Width / (float)ClientSize.Height, 0.1f, 50.0f);
+                v.ViewProjectionMatrix = camera.GetThirdPersonViewMatrix() * Matrix4.CreatePerspectiveFieldOfView(1.3f, ClientSize.Width / (float)ClientSize.Height, 1.0f, 40.0f); 
                 v.ModelViewProjectionMatrix = v.ModelMatrix * v.ViewProjectionMatrix;
             }
 
@@ -269,13 +246,12 @@ namespace Estilingue
                 Matrix4.CreatePerspectiveFieldOfView(1.3f, (float)ClientSize.Width / (float)ClientSize.Height, 0.1f, 50.0f);
             player.ModelViewProjectionMatrix = player.ModelMatrix * player.ViewProjectionMatrix;
 
-            GL.UseProgram(pgmID);
+            GL.UseProgram(shaders[activeShader].programID);
 
-            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, ibo_elements);
             GL.BufferData(BufferTarget.ElementArrayBuffer, (IntPtr)(indicedata.Length * sizeof(int)), indicedata, BufferUsageHint.StaticDraw);
 
-            Input.Update(FPS);
+            Input.Update();
         }
     }
 }

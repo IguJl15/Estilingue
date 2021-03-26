@@ -6,9 +6,9 @@ namespace Estilingue
     {
         public Vector3 color;
 
-        public Cube(Vector3 position, Vector3 rotation, Vector3 scale, Vector3 color) : base(position, rotation, scale, color)
+        public Cube(Vector3 position, Vector3 rotation, Vector3 scale) : base(position, rotation, scale)
         {
-            this.color = color;
+
             VertCount = 8;
             IndiceCount = 36; // Two triangles (3 vertices) per face for all the six faces. 2 * 3 * 6
             ColorDataCount = 8;
@@ -82,6 +82,10 @@ namespace Estilingue
                 Matrix4.CreateRotationY(Rotation.Y) *
                 Matrix4.CreateRotationZ(Rotation.Z) *
                 Matrix4.CreateTranslation(Position);
+        }
+        public override Vector2[] GetTextureCoords()
+        {
+            return System.Array.Empty<Vector2>();
         }
     }
 }

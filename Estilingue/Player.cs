@@ -13,7 +13,7 @@ namespace Estilingue
         private float maxVelocity = 5;
         private readonly float acceleration = 1;
         public float mouseSensitivity = 0.03f;
-        public Player(Vector3 position, Vector3 rotation, Vector3 color) : base(position, rotation, Vector3.One, color)
+        public Player(Vector3 position, Vector3 rotation, Vector3 color) : base(position, rotation, Vector3.One)
         {
         }
 

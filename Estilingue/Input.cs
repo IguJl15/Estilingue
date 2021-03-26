@@ -78,7 +78,7 @@ namespace Estilingue
             }
         }
 
-        public static void Update(float fps)
+        public static void Update()
         {
             keysDownLast = new(keysDown);
             buttonsDownLast = new(buttonsDown);
