@@ -8,7 +8,6 @@ namespace Estilingue
 
         public Cube(Vector3 position, Vector3 rotation, Vector3 scale) : base(position, rotation, scale)
         {
-
             VertCount = 8;
             IndiceCount = 36; // Two triangles (3 vertices) per face for all the six faces. 2 * 3 * 6
             ColorDataCount = 8;
@@ -83,6 +82,7 @@ namespace Estilingue
                 Matrix4.CreateRotationZ(Rotation.Z) *
                 Matrix4.CreateTranslation(Position);
         }
+
         public override Vector2[] GetTextureCoords()
         {
             return System.Array.Empty<Vector2>();

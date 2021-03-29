@@ -15,16 +15,16 @@ namespace Estilingue
         public int AttributeCount = 0;
         public int UniformCount = 0;
 
-        public Dictionary<String, AttributeInfo> Attributes = new Dictionary<string, AttributeInfo>();
-        public Dictionary<String, UniformInfo> Uniforms = new Dictionary<string, UniformInfo>();
-        public Dictionary<String, uint> Buffers = new Dictionary<string, uint>();
+        public Dictionary<String, AttributeInfo> Attributes = new();
+        public Dictionary<String, UniformInfo> Uniforms = new();
+        public Dictionary<String, uint> Buffers = new();
 
         public ShaderProgram()
         {
             programID = GL.CreateProgram();
         }
 
-        private void loadShader(String code, ShaderType type, out int address)
+        private void LoadShader(String code, ShaderType type, out int address)
         {
             address = GL.CreateShader(type);
             GL.ShaderSource(address, code);
@@ -37,25 +37,27 @@ namespace Estilingue
         {
             if (type == ShaderType.VertexShader)
             {
-                loadShader(code, type, out VShaderID);
+                LoadShader(code, type, out VShaderID);
             }
             else if (type == ShaderType.FragmentShader)
             {
-                loadShader(code, type, out FShaderID);
+                LoadShader(code, type, out FShaderID);
             }
         }
 
         public void LoadShaderFromFile(String filename, ShaderType type)
         {
-            using (StreamReader sr = new StreamReader(filename))
+#pragma warning disable IDE0063 // Usar a instrução 'using' simples
+            using (StreamReader sr = new(filename))
+#pragma warning restore IDE0063 // Usar a instrução 'using' simples
             {
                 if (type == ShaderType.VertexShader)
                 {
-                    loadShader(sr.ReadToEnd(), type, out VShaderID);
+                    LoadShader(sr.ReadToEnd(), type, out VShaderID);
                 }
                 else if (type == ShaderType.FragmentShader)
                 {
-                    loadShader(sr.ReadToEnd(), type, out FShaderID);
+                    LoadShader(sr.ReadToEnd(), type, out FShaderID);
                 }
             }
         }
@@ -71,13 +73,11 @@ namespace Estilingue
 
             for (int i = 0; i < AttributeCount; i++)
             {
-                AttributeInfo info = new AttributeInfo();
-                int length = 0;
+                AttributeInfo info = new();
 
-                StringBuilder name = new StringBuilder();
+                StringBuilder name = new();
                 info.name = name.ToString();
-
-                GL.GetActiveAttrib(programID, i, 256, out length, out info.size, out info.type, out info.name);
+                GL.GetActiveAttrib(programID, i, 256, out _, out info.size, out info.type, out info.name);
 
                 info.address = GL.GetAttribLocation(programID, info.name);
                 Attributes.Add(info.name.ToString(), info);
@@ -85,13 +85,12 @@ namespace Estilingue
 
             for (int i = 0; i < UniformCount; i++)
             {
-                UniformInfo info = new UniformInfo();
-                int length = 0;
+                UniformInfo info = new();
 
-                StringBuilder name = new StringBuilder();
+                StringBuilder name = new();
                 info.name = name.ToString();
 
-                GL.GetActiveUniform(programID, i, 256, out length, out info.size, out info.type, out info.name);
+                GL.GetActiveUniform(programID, i, 256, out int _, out info.size, out info.type, out info.name);
 
                 Uniforms.Add(info.name.ToString(), info);
                 info.address = GL.GetUniformLocation(programID, info.name);
@@ -102,16 +101,14 @@ namespace Estilingue
         {
             for (int i = 0; i < Attributes.Count; i++)
             {
-                uint buffer = 0;
-                GL.GenBuffers(1, out buffer);
+                GL.GenBuffers(1, out uint buffer);
 
                 Buffers.Add(Attributes.Values.ElementAt(i).name, buffer);
             }
 
             for (int i = 0; i < Uniforms.Count; i++)
             {
-                uint buffer = 0;
-                GL.GenBuffers(1, out buffer);
+                GL.GenBuffers(1, out uint buffer);
 
                 Buffers.Add(Uniforms.Values.ElementAt(i).name, buffer);
             }

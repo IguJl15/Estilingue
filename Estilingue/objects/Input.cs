@@ -12,19 +12,29 @@ namespace Estilingue
         private static List<MouseButton> buttonsDown;
         private static List<MouseButton> buttonsDownLast;
         private static Vector2 mousePosition;
-        private static Vector2 lastMousePosition;
+        private static Vector2 mousePositionLast;
         private static float wheelCount;
         private static float deltaWheel;
-
+        private static GameWindow game;
+        private static bool mouseLock;
+        public static List<Key> KeysDown { get => keysDown; set => keysDown = value; }
+        public static GameWindow Game { set => game = value; }
+        public static bool MouseLock { get => mouseLock; set => mouseLock = value; }
 
         public static void Initialize(GameWindow game)
         {
+            Game = game;
             keysDown = new();
             keysDownLast = new();
             buttonsDown = new();
             buttonsDownLast = new();
             mousePosition = new();
-            lastMousePosition = new();
+            mousePositionLast = new();
+            mouseLock = true;
+            if (mouseLock)
+            {
+                SetMousePosition(Vector2.Zero);
+            }
 
             game.KeyDown += Game_KeyDown;
             game.KeyUp += Game_KeyUp;
@@ -32,20 +42,22 @@ namespace Estilingue
             game.MouseUp += Game_MouseUp;
             game.MouseWheel += Game_MouseWheel;
             game.MouseMove += Game_MouseMove;
+            game.FocusedChanged += Game_FocusedChanged;
         }
 
-
+        private static void Game_FocusedChanged(object sender, EventArgs e)
+        {
+            mousePositionLast = mousePosition;
+        }
         private static void Game_MouseMove(object sender, MouseMoveEventArgs e)
         {
-            mousePosition = new(e.Position.X, e.Position.Y);
+            mousePosition = new(Mouse.GetState().X, Mouse.GetState().Y);
         }
-
         private static void Game_MouseWheel(object sender, MouseWheelEventArgs e)
         {
             wheelCount = e.ValuePrecise;
             deltaWheel = e.DeltaPrecise;
         }
-
         private static void Game_KeyUp(object sender, KeyboardKeyEventArgs e)
         {
             while (keysDown.Contains(e.Key))
@@ -53,7 +65,6 @@ namespace Estilingue
                 keysDown.Remove(e.Key);
             }
         }
-
         private static void Game_KeyDown(object sender, KeyboardKeyEventArgs e)
         {
             while (!keysDown.Contains(e.Key))
@@ -61,7 +72,6 @@ namespace Estilingue
                 keysDown.Add(e.Key);
             }
         }
-
         private static void Game_MouseUp(object sender, MouseButtonEventArgs e)
         {
             while (buttonsDown.Contains(e.Button))
@@ -69,7 +79,6 @@ namespace Estilingue
                 buttonsDown.Remove(e.Button);
             }
         }
-
         private static void Game_MouseDown(object sender, MouseButtonEventArgs e)
         {
             while (!buttonsDown.Contains(e.Button))
@@ -82,8 +91,17 @@ namespace Estilingue
         {
             keysDownLast = new(keysDown);
             buttonsDownLast = new(buttonsDown);
-            lastMousePosition = mousePosition;
             deltaWheel = 0.0f;
+
+            if (mouseLock){
+                SetMousePosition(new(0f, 0f));
+            }
+
+            if (game.Focused)
+            {
+                mousePositionLast = new Vector2(OpenTK.Input.Mouse.GetState().X, OpenTK.Input.Mouse.GetState().Y);
+            }
+
         }
 
         /// <summary>
@@ -94,6 +112,12 @@ namespace Estilingue
         public static bool KeyPress(Key key)
         {
             return (keysDown.Contains(key) && !keysDownLast.Contains(key));
+        }
+        public static bool KeyPress(String key)
+        {
+
+            Key lKey = Enum.Parse<Key>(key);
+            return (keysDown.Contains(lKey) && !keysDownLast.Contains(lKey));
         }
 
         /// <summary>
@@ -124,6 +148,11 @@ namespace Estilingue
         {
             return (buttonsDown.Contains(button) && !buttonsDownLast.Contains(button));
         }
+        public static bool MousePress(string button)
+        {
+            MouseButton lButton = Enum.Parse<MouseButton>(button);
+            return (buttonsDown.Contains(lButton) && !buttonsDownLast.Contains(lButton));
+        }
 
         /// <summary>
         /// Indica se um Botão acaba de ser solto.
@@ -151,7 +180,7 @@ namespace Estilingue
         /// <returns></returns>
         public static Vector2 MousePosition()
         {
-            return mousePosition;
+            return new(Mouse.GetState().X, Mouse.GetState().Y);
         }
         public static float WheelCount()
         {
@@ -163,7 +192,18 @@ namespace Estilingue
         }
         public static Vector2 DeltaMovement()
         {
-            return mousePosition - lastMousePosition;
+            if (mouseLock)
+            {
+                return MousePosition();
+            }
+            else
+            {
+                return MousePosition() - mousePositionLast;
+            }
+        }
+        public static void SetMousePosition(Vector2 location)
+        {
+            Mouse.SetPosition(location.X + game.Location.X + game.ClientSize.Width / 2, location.Y + game.Location.Y + game.ClientSize.Height / 2);
         }
     }
 }

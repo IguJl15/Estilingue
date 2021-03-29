@@ -18,7 +18,6 @@ namespace Estilingue
         private bool isTextured = false;
         private int textureID;
 
-
         public Vector3 Position { get => position; set => position = value; }
         public Vector3 Rotation { get => rotation; set => rotation = value; }
         public Vector3 Scale { get => scale; set => scale = value; }
@@ -32,7 +31,6 @@ namespace Estilingue
         public bool IsTextured { get => isTextured; set => isTextured = value; }
         public int TextureID { get => textureID; set => textureID = value; }
 
-
         protected Volume(Vector3 position, Vector3 rotation, Vector3 scale)
         {
             this.position = position;
@@ -41,9 +39,13 @@ namespace Estilingue
         }
 
         public abstract Vector3[] GetVerts();
+
         public abstract int[] GetIndices(int offset = 0);
+
         public abstract Vector3[] GetColorData();
+
         public abstract Vector2[] GetTextureCoords();
+
         public abstract void CalculateModelMatrix();
     }
 }
