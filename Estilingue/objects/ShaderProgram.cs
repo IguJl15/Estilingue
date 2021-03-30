@@ -30,7 +30,6 @@ namespace Estilingue
             GL.ShaderSource(address, code);
             GL.CompileShader(address);
             GL.AttachShader(programID, address);
-            Console.WriteLine(GL.GetShaderInfoLog(address));
         }
 
         public void LoadShaderFromString(String code, ShaderType type)
@@ -65,8 +64,6 @@ namespace Estilingue
         public void Link()
         {
             GL.LinkProgram(programID);
-
-            Console.WriteLine(GL.GetProgramInfoLog(programID));
 
             GL.GetProgram(programID, GetProgramParameterName.ActiveAttributes, out AttributeCount);
             GL.GetProgram(programID, GetProgramParameterName.ActiveUniforms, out UniformCount);

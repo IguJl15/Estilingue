@@ -29,14 +29,18 @@ namespace Estilingue
         private Player player;
         private TCamera camera;
 
+        private bool pause = false;
+
         public float FPS;
 
         public Game()
-            : base(1440,900, new GraphicsMode(32,24,0,2)){}
+            : base(1440,900, new GraphicsMode(32,24,0,2), "Bem-Vindo!"){  }
         
         private void InitProgram()
         {
+            
 
+            CursorVisible = false;
 
             Input.Initialize(this);
 
@@ -61,12 +65,12 @@ namespace Estilingue
             tc2.TextureID = textures["opentksquare2.png"];
             objects.Add(tc2);
 
-            TexturedCube tc3 = new(new Vector3(0.0f, -1f, 0f), Vector3.Zero, new Vector3(50f, 0.05f, 15f));
+            TexturedCube tc3 = new(new Vector3(0.0f, -1f, 0f), Vector3.Zero, new Vector3(20f, 1f, 10f));
             tc3.Position += new Vector3(1f, 1f, 1f);
             tc3.TextureID = textures["opentksquare3.png"];
             objects.Add(tc3);
 
-            player = new(new(0.0f, 0.0f, -5f), Vector3.Zero);
+            player = new(new(0.0f, 1.0f, -5f), Vector3.Zero);
             player.TextureID = textures["player.png"];
             objects.Add(player);
 
@@ -78,8 +82,7 @@ namespace Estilingue
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-
-            Title = "Hello OpenTK!";
+            Log();
             GL.ClearColor(Color.CornflowerBlue);
             GL.PointSize(5f);
             InitProgram();
@@ -123,10 +126,38 @@ namespace Estilingue
         {
             base.OnUpdateFrame(e);
 
+            FPS++;
 
+            if (FPS >= 60)
+            {
+                Title = string.Format("FPS: " + (int)(1d / e.Time));
+                FPS = 0f;
+            }
 
-            UpdatesProcess((float)e.Time);
+            if (pause) { }
+            else
+            {
+                UpdatesProcess((float)e.Time);
+            }
 
+            if (Input.KeyPress("Escape") && CursorVisible)
+            {
+                Close();
+            }
+            else if (Input.KeyPress("Escape") && !CursorVisible)
+            {
+                CursorVisible = true;
+                pause = true;
+                Input.MouseLock = false;
+                Log();
+            }
+            if (Input.MousePress("Left") && CursorVisible && pause)
+            {
+                CursorVisible = false;
+                pause = false;
+                Input.MouseLock = true;
+                Log();
+            }
             // In this code, we gather up all the values for the data we need to send to the graphics card.
             List<Vector3> verts = new();
             List<int> inds = new();
@@ -195,32 +226,34 @@ namespace Estilingue
             camera.Update(mouseSensitivity);
             player.Update(delta, mouseSensitivity);
 
-            if (Input.KeyPress("Escape") && CursorVisible)
-            {
-                Close();
-            }
-            else if(Input.KeyPress("Escape") && !CursorVisible)
-            {
-                CursorVisible = true;
-                Input.MouseLock = false;
-            }
-            if (Input.MousePress("Left") && CursorVisible)
-            {
-                CursorVisible = false;
-            }
-            if (Input.KeyPress("C"))
-            {
-                if (Input.MouseLock)
-                {
-                    Input.MouseLock = false;
-                }
-                else if (!Input.MouseLock)
-                {
-                    Input.MouseLock = true;
-                }
-            }
-
         }
+
+        private void Log()
+        {
+            Console.Clear();
+            string PAUSE = string.Format("\n\n                    P A U S E D\n\n    CLICK EM QUALQUER LUGAR DA TELA PARA DESPAUSAR");
+            string CONTROLS = string.Format(    "                 W\n{0}{1}{2}{3}{4}{5}{6}",
+                                                " USE:           ASD            PARA SE MOVIMENTAR.\n",
+                                                "        LShift       ESPAÇO\n",
+                                                "   MOVA O MOUSE PARA OLHAR AO REDOR\n\n",
+                                                "   SEGURE O BOTÃO ESQUERDO DO MOUSE\n",
+                                                "          PARA A FREE VIEW\n\n",
+                                                "     UTILIZE A RODA DO MOUSE PARA\n",
+                                                "            ALTERAR O ZOOM\n");
+            if (pause)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(PAUSE);
+                Title += "  P A U S E D";
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine(CONTROLS);
+                Title += "  R E S U M E D";
+            }
+    }
+
         static int LoadImage(Bitmap image)
         {
             int textID = GL.GenTexture();

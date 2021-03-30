@@ -34,6 +34,10 @@ namespace Estilingue
         public void Update(float mouseSensitivity)
         {
             distanceToTarget -= Input.DeltaWheel() * 0.1f;
+            if (distanceToTarget < 2) distanceToTarget = 2;
+            if (distanceToTarget > 10) distanceToTarget = 10;
+
+            
 
             if (Input.MouseDown(OpenTK.Input.MouseButton.Left))
             {

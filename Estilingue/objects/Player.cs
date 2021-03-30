@@ -76,7 +76,6 @@ namespace Estilingue
             }
 
             //orientation.X %= 2f * MathF.PI;
-            Console.WriteLine(orientation.X);
 
             Rotation = new(0, orientation.X + MathF.PI / 2, 0);
 
