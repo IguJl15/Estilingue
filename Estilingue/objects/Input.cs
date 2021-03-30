@@ -28,30 +28,28 @@ namespace Estilingue
             keysDownLast = new();
             buttonsDown = new();
             buttonsDownLast = new();
-            mousePosition = new();
             mousePositionLast = new();
             mouseLock = true;
-            if (mouseLock)
-            {
-                SetMousePosition(Vector2.Zero);
-            }
+            SetMousePosition(Vector2.Zero);
+            Update();
 
             game.KeyDown += Game_KeyDown;
             game.KeyUp += Game_KeyUp;
             game.MouseDown += Game_MouseDown;
             game.MouseUp += Game_MouseUp;
             game.MouseWheel += Game_MouseWheel;
-            game.MouseMove += Game_MouseMove;
             game.FocusedChanged += Game_FocusedChanged;
+            game.MouseMove += Game_MouseMove;
+        }
+
+        private static void Game_MouseMove(object sender, MouseMoveEventArgs e)
+        {
+            mousePosition = new(e.Position.X - game.ClientSize.Width / 2, -(e.Position.Y - game.ClientSize.Height / 2));
         }
 
         private static void Game_FocusedChanged(object sender, EventArgs e)
         {
-            mousePositionLast = mousePosition;
-        }
-        private static void Game_MouseMove(object sender, MouseMoveEventArgs e)
-        {
-            mousePosition = new(Mouse.GetState().X, Mouse.GetState().Y);
+            mousePositionLast = new(Mouse.GetState().X, Mouse.GetState().Y);
         }
         private static void Game_MouseWheel(object sender, MouseWheelEventArgs e)
         {
@@ -93,15 +91,15 @@ namespace Estilingue
             buttonsDownLast = new(buttonsDown);
             deltaWheel = 0.0f;
 
-            if (mouseLock){
-                SetMousePosition(new(0f, 0f));
-            }
-
             if (game.Focused)
             {
-                mousePositionLast = new Vector2(OpenTK.Input.Mouse.GetState().X, OpenTK.Input.Mouse.GetState().Y);
-            }
+                mousePositionLast = MousePosition();
 
+                if (mouseLock)
+                {
+                    SetMousePosition(new(0f, 0f));
+                }
+            }
         }
 
         /// <summary>
@@ -180,7 +178,7 @@ namespace Estilingue
         /// <returns></returns>
         public static Vector2 MousePosition()
         {
-            return new(Mouse.GetState().X, Mouse.GetState().Y);
+            return mousePosition;
         }
         public static float WheelCount()
         {
@@ -194,11 +192,11 @@ namespace Estilingue
         {
             if (mouseLock)
             {
-                return MousePosition();
+                return mousePosition;
             }
             else
             {
-                return MousePosition() - mousePositionLast;
+                return mousePosition - mousePositionLast;
             }
         }
         public static void SetMousePosition(Vector2 location)

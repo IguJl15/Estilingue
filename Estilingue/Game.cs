@@ -49,6 +49,7 @@ namespace Estilingue
 
             textures.Add("opentksquare.png", LoadImage("content/opentksquare.png"));
             textures.Add("opentksquare2.png", LoadImage("content/opentksquare2.png"));
+            textures.Add("opentksquare3.png", LoadImage("content/opentksquare3.png"));
             textures.Add("player.png", LoadImage("content/player.png"));
 
             TexturedCube tc = new(new(5.0f, 1f, 0f), Vector3.Zero, Vector3.One);
@@ -62,7 +63,7 @@ namespace Estilingue
 
             TexturedCube tc3 = new(new Vector3(0.0f, -1f, 0f), Vector3.Zero, new Vector3(50f, 0.05f, 15f));
             tc3.Position += new Vector3(1f, 1f, 1f);
-            tc3.TextureID = textures["opentksquare2.png"];
+            tc3.TextureID = textures["opentksquare3.png"];
             objects.Add(tc3);
 
             player = new(new(0.0f, 0.0f, -5f), Vector3.Zero);
@@ -121,6 +122,8 @@ namespace Estilingue
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             base.OnUpdateFrame(e);
+
+
 
             UpdatesProcess((float)e.Time);
 
@@ -189,9 +192,8 @@ namespace Estilingue
 
         private void UpdatesProcess(float delta)
         {
-            player.Update(delta, mouseSensitivity);
             camera.Update(mouseSensitivity);
-            Console.WriteLine(player.ModelMatrix.ExtractTranslation());
+            player.Update(delta, mouseSensitivity);
 
             if (Input.KeyPress("Escape") && CursorVisible)
             {
@@ -200,18 +202,19 @@ namespace Estilingue
             else if(Input.KeyPress("Escape") && !CursorVisible)
             {
                 CursorVisible = true;
+                Input.MouseLock = false;
             }
             if (Input.MousePress("Left") && CursorVisible)
             {
                 CursorVisible = false;
             }
-            if (Input.KeyPress(OpenTK.Input.Key.C))
+            if (Input.KeyPress("C"))
             {
                 if (Input.MouseLock)
                 {
                     Input.MouseLock = false;
                 }
-                if (!Input.MouseLock)
+                else if (!Input.MouseLock)
                 {
                     Input.MouseLock = true;
                 }
