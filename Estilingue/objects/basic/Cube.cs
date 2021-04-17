@@ -1,6 +1,6 @@
 ﻿using OpenTK;
 
-namespace Estilingue
+namespace Estilingue.objects
 {
     public class Cube : Volume
     {
@@ -18,7 +18,7 @@ namespace Estilingue
             return new[]{new(-0.5f, -0.5f,  -0.5f),
                 new Vector3(0.5f, -0.5f,  -0.5f),
                 new Vector3(0.5f, 0.5f,  -0.5f),
-                new Vector3(-0.5f, 0.5f,  -0.5f),
+                new Vector3(-0.5f, 0.5f,  -0.5f), 
                 new Vector3(-0.5f, -0.5f,  0.5f),
                 new Vector3(0.5f, -0.5f,  0.5f),
                 new Vector3(0.5f, 0.5f,  0.5f),

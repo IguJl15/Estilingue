@@ -4,11 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Estilingue.objects
+namespace Estilingue.objects.basic
 {
-
-    class Log
+    public class Rectangle
     {
-        
     }
 }

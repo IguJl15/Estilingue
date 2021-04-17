@@ -7,7 +7,7 @@ namespace Estilingue
         private static void Main()
         {
             Game window = new();
-            window.Run(60,60);
+            window.Run(60, 60);
         }
     }
 }

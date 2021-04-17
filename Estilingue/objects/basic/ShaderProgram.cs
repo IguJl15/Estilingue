@@ -1,13 +1,13 @@
-﻿using System;
+﻿using OpenTK.Graphics.OpenGL;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
-using OpenTK.Graphics.OpenGL;
-using System.IO;
 
-namespace Estilingue
+namespace Estilingue.objects
 {
-    class ShaderProgram
+    internal class ShaderProgram
     {
         public int programID = -1;
         public int VShaderID = -1;
@@ -162,8 +162,6 @@ namespace Estilingue
                 return 0;
             }
         }
-
-
 
         public ShaderProgram(String vshader, String fshader, bool fromFile = false)
         {

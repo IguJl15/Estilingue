@@ -1,8 +1,8 @@
 ﻿using OpenTK;
 
-namespace Estilingue
+namespace Estilingue.objects
 {
-    internal class TexturedCube : Cube
+    public class TexturedCube : Cube
     {
         public TexturedCube(Vector3 position, Vector3 rotation, Vector3 scale)
            : base(position, rotation, scale)

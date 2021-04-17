@@ -15,6 +15,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="cow-nonormals.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="content\opentksquare.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -26,6 +29,12 @@
     </None>
     <None Update="content\player.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="d8.obj">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="teddy.obj">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="fs.glsl">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

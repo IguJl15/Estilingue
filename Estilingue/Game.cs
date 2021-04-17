@@ -1,92 +1,48 @@
-﻿using OpenTK;
+﻿using Estilingue.objects;
+using OpenTK;
 using OpenTK.Graphics;
-using OpenTK.Graphics.OpenGL;
+using OpenTK.Graphics.OpenGL4;
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Linq;
-
 namespace Estilingue
 {
     public class Game : GameWindow
     {
-        
-        private Vector3[] vertdata;
-        private Vector3[] coldata;
-        private int[] indicedata;
-        private int ibo_elements;
-        public float mouseSensitivity = 0.0025f;
-        Vector2[] texcoorddata;
-        string activeShader = "default";
-#pragma warning disable IDE0044
-        Dictionary<string, ShaderProgram> shaders = new();
-        Dictionary<string, int> textures = new();
-        private List<Volume> objects = new();
-#pragma warning restore IDE0044
 
-        private Player player;
-        private TCamera camera;
+        public float mouseSensitivity = 0.002f;
 
         private bool pause = false;
 
         public float FPS;
+        public float delta;
+
+        public PlayerScene playerScene;
+        public FCamera camera;
 
         public Game()
-            : base(1440,900, new GraphicsMode(32,24,0,2), "Bem-Vindo!"){  }
-        
+            : base(1280, 720, new GraphicsMode(32, 24, 0, 2), "Bem-Vindo!") { }
+
         private void InitProgram()
         {
+            playerScene = new(this);
+            camera = new(TypeOfView.Orthographic, playerScene.player, this);
             
-
-            CursorVisible = false;
-
+            playerScene.Init();
+            camera.Init();
             Input.Initialize(this);
-
-            /** We'll need to get another buffer object to put our indice data into.  */
-            GL.GenBuffers(1, out ibo_elements);
-
-            shaders.Add("default", new ShaderProgram("shader/vs.glsl", "shader/fs.glsl", true));
-            shaders.Add("textured", new ShaderProgram("shader/vs_tex.glsl", "shader/fs_tex.glsl", true));
-            activeShader = "textured";
-
-            textures.Add("opentksquare.png", LoadImage("content/opentksquare.png"));
-            textures.Add("opentksquare2.png", LoadImage("content/opentksquare2.png"));
-            textures.Add("opentksquare3.png", LoadImage("content/opentksquare3.png"));
-            textures.Add("player.png", LoadImage("content/player.png"));
-
-            TexturedCube tc = new(new(5.0f, 1f, 0f), Vector3.Zero, Vector3.One);
-            tc.TextureID = textures["opentksquare.png"];
-            objects.Add(tc);
-
-            TexturedCube tc2 = new(new(-5.0f, 1f, 0f), Vector3.Zero, Vector3.One);
-            tc2.Position += new Vector3(1f, 1f, 1f);
-            tc2.TextureID = textures["opentksquare2.png"];
-            objects.Add(tc2);
-
-            TexturedCube tc3 = new(new Vector3(0.0f, -1f, 0f), Vector3.Zero, new Vector3(20f, 1f, 10f));
-            tc3.Position += new Vector3(1f, 1f, 1f);
-            tc3.TextureID = textures["opentksquare3.png"];
-            objects.Add(tc3);
-
-            player = new(new(0.0f, 1.0f, -5f), Vector3.Zero);
-            player.TextureID = textures["player.png"];
-            objects.Add(player);
-
-            camera = new(player);
-
-
-
         }
-        protected override void OnLoad(EventArgs e)
+
+        protected override void OnLoad(EventArgs _)
         {
-            base.OnLoad(e);
             Log();
-            GL.ClearColor(Color.CornflowerBlue);
-            GL.PointSize(5f);
+
+            GL.ClearColor(Color.SteelBlue);
+            GL.PointSize(size: 5);
             InitProgram();
         }
+
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             base.OnRenderFrame(e);
@@ -94,37 +50,16 @@ namespace Estilingue
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.Enable(EnableCap.DepthTest);
 
+            playerScene.Render();
+            //worldScene.Render();
 
-            shaders[activeShader].EnableVertexAttribArrays();
-
-            int indiceat = 0;
-
-            foreach (Volume v in objects)
-            {
-                GL.ActiveTexture(TextureUnit.Texture0);
-                GL.BindTexture(TextureTarget.Texture2D, v.TextureID);
-
-                Matrix4 mdv1 = v.ModelViewProjectionMatrix;
-
-                GL.UniformMatrix4(shaders[activeShader].GetUniform("modelview"), false, ref mdv1);
-
-                if (shaders[activeShader].GetUniform("maintexture") != -1)
-                {
-                    GL.Uniform1(shaders[activeShader].GetUniform("maintexture"), 0);
-                }
-
-                GL.DrawElements(BeginMode.Triangles, v.IndiceCount, DrawElementsType.UnsignedInt, indiceat * sizeof(uint));
-                indiceat += v.IndiceCount;
-            }
-
-            shaders[activeShader].DisableVertexAttribArrays();
-
-            GL.Flush();
             SwapBuffers();
         }
+
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             base.OnUpdateFrame(e);
+            delta = (float)e.Time;
 
             FPS++;
 
@@ -158,81 +93,21 @@ namespace Estilingue
                 Input.MouseLock = true;
                 Log();
             }
-            // In this code, we gather up all the values for the data we need to send to the graphics card.
-            List<Vector3> verts = new();
-            List<int> inds = new();
-            List<Vector3> colors = new();
-            List<Vector2> texcoords = new();
-
-            int vertcount = 0;
-
-            foreach (Volume v in objects)
-            {
-                verts.AddRange(v.GetVerts().ToList());
-                inds.AddRange(v.GetIndices(vertcount).ToList());
-                colors.AddRange(v.GetColorData().ToList());
-                texcoords.AddRange(v.GetTextureCoords());
-                vertcount += v.VertCount;
-            }
-
-            vertdata = verts.ToArray();
-
-            indicedata = inds.ToArray();
-            coldata = colors.ToArray();
-            texcoorddata = texcoords.ToArray();
-
-
-
-            GL.BindBuffer(BufferTarget.ArrayBuffer, shaders[activeShader].GetBuffer("vPosition"));
-
-            GL.BufferData<Vector3>(BufferTarget.ArrayBuffer, (IntPtr)(vertdata.Length * Vector3.SizeInBytes), vertdata, BufferUsageHint.StaticDraw);
-            GL.VertexAttribPointer(shaders[activeShader].GetAttribute("vPosition"), 3, VertexAttribPointerType.Float, false, 0, 0);
-
-            // Buffer vertex color if shader supports it
-            if (shaders[activeShader].GetAttribute("vColor") != -1)
-            {
-                GL.BindBuffer(BufferTarget.ArrayBuffer, shaders[activeShader].GetBuffer("vColor"));
-                GL.BufferData<Vector3>(BufferTarget.ArrayBuffer, (IntPtr)(coldata.Length * Vector3.SizeInBytes), coldata, BufferUsageHint.StaticDraw);
-                GL.VertexAttribPointer(shaders[activeShader].GetAttribute("vColor"), 3, VertexAttribPointerType.Float, true, 0, 0);
-            }
-            
-
-            // Buffer texture coordinates if shader supports it
-            if (shaders[activeShader].GetAttribute("texcoord") != -1)
-            {
-                GL.BindBuffer(BufferTarget.ArrayBuffer, shaders[activeShader].GetBuffer("texcoord"));
-                GL.BufferData<Vector2>(BufferTarget.ArrayBuffer, (IntPtr)(texcoorddata.Length * Vector2.SizeInBytes), texcoorddata, BufferUsageHint.StaticDraw);
-                GL.VertexAttribPointer(shaders[activeShader].GetAttribute("texcoord"), 2, VertexAttribPointerType.Float, true, 0, 0);
-            }
-
-            foreach (Volume v in objects)
-            {
-                v.CalculateModelMatrix();
-                v.ViewProjectionMatrix = camera.GetThirdPersonViewMatrix() *
-                    Matrix4.CreatePerspectiveFieldOfView(1.3f, (float)ClientSize.Width / (float)ClientSize.Height, 1.0f, 80.0f); 
-                v.ModelViewProjectionMatrix = v.ModelMatrix * v.ViewProjectionMatrix;
-            }
-
-            GL.UseProgram(shaders[activeShader].programID);
-
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, ibo_elements);
-            GL.BufferData(BufferTarget.ElementArrayBuffer, (IntPtr)(indicedata.Length * sizeof(int)), indicedata, BufferUsageHint.StaticDraw);
 
             Input.Update();
         }
 
         private void UpdatesProcess(float delta)
         {
-            camera.Update(mouseSensitivity);
-            player.Update(delta, mouseSensitivity);
-
+            playerScene.Update();
+            camera.Update();
         }
 
         private void Log()
         {
             Console.Clear();
-            string PAUSE = string.Format("\n\n                    P A U S E D\n\n    CLICK EM QUALQUER LUGAR DA TELA PARA DESPAUSAR");
-            string CONTROLS = string.Format(    "                 W\n{0}{1}{2}{3}{4}{5}{6}",
+            string PAUSE = string.Format("\n\n                    P A U S E D\n\n    CLICK EM QUALQUER LUGAR DA TELA PARA RESUMIR");
+            string CONTROLS = string.Format("                 W\n{0}{1}{2}{3}{4}{5}{6}",
                                                 " USE:           ASD            PARA SE MOVIMENTAR.\n",
                                                 "        LShift       ESPAÇO\n",
                                                 "   MOVA O MOUSE PARA OLHAR AO REDOR\n\n",
@@ -252,9 +127,9 @@ namespace Estilingue
                 Console.WriteLine(CONTROLS);
                 Title += "  R E S U M E D";
             }
-    }
+        }
 
-        static int LoadImage(Bitmap image)
+        public static int LoadImage(Bitmap image)
         {
             int textID = GL.GenTexture();
 
@@ -268,14 +143,15 @@ namespace Estilingue
                 TextureTarget.Texture2D, 0,
                 PixelInternalFormat.Rgba,
                 data.Width, data.Height, 0,
-                OpenTK.Graphics.OpenGL.PixelFormat.Bgra,
+                OpenTK.Graphics.OpenGL4.PixelFormat.Bgra,
                 PixelType.UnsignedByte,
                 data.Scan0);
             image.UnlockBits(data);
             GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
             return textID;
         }
-        static int LoadImage(string filename)
+
+        public static int LoadImage(string filename)
         {
             try
             {
